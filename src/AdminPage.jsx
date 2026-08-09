@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Check,
   EyeOff,
+  Flag,
   LoaderCircle,
   LogIn,
   LogOut,
@@ -24,6 +25,14 @@ const CATEGORY_NAMES = {
   other: 'อื่น ๆ',
 };
 
+const REPORT_REASON_NAMES = {
+  bullying: 'มีการกลั่นแกล้งหรือคุกคาม',
+  personal_information: 'เปิดเผยข้อมูลส่วนบุคคล',
+  harmful_content: 'เนื้อหาอาจก่อให้เกิดอันตราย',
+  spam: 'สแปมหรือเนื้อหาไม่เกี่ยวข้อง',
+  other: 'เหตุผลอื่น',
+};
+
 const styles = {
   page: {
     minHeight: '100vh',
@@ -33,13 +42,11 @@ const styles = {
       'linear-gradient(180deg, #17142f 0%, #241f42 50%, #121029 100%)',
     fontFamily: "'Sarabun', Arial, sans-serif",
   },
-
   container: {
     width: '100%',
-    maxWidth: '780px',
+    maxWidth: '900px',
     margin: '0 auto',
   },
-
   header: {
     display: 'flex',
     alignItems: 'center',
@@ -47,27 +54,23 @@ const styles = {
     gap: '16px',
     marginBottom: '25px',
   },
-
   brand: {
     display: 'flex',
     alignItems: 'center',
     gap: '11px',
   },
-
   title: {
     margin: 0,
     color: '#ffe1b2',
     fontSize: '23px',
     fontWeight: 600,
   },
-
   subtitle: {
     margin: '4px 0 0',
     color: 'rgba(225, 211, 240, 0.55)',
     fontSize: '12px',
     lineHeight: 1.55,
   },
-
   card: {
     padding: '18px',
     border: '1px solid rgba(216, 194, 250, 0.14)',
@@ -75,7 +78,6 @@ const styles = {
     background: 'rgba(255, 255, 255, 0.055)',
     boxShadow: '0 18px 48px rgba(0, 0, 0, 0.22)',
   },
-
   loginCard: {
     width: '100%',
     maxWidth: '440px',
@@ -86,14 +88,12 @@ const styles = {
     background: 'rgba(255, 255, 255, 0.055)',
     boxShadow: '0 18px 48px rgba(0, 0, 0, 0.22)',
   },
-
   label: {
     display: 'block',
     margin: '15px 0 7px',
     color: 'rgba(230, 216, 243, 0.72)',
     fontSize: '12px',
   },
-
   input: {
     width: '100%',
     padding: '12px 13px',
@@ -105,7 +105,6 @@ const styles = {
     fontSize: '14px',
     boxSizing: 'border-box',
   },
-
   primaryButton: {
     display: 'flex',
     width: '100%',
@@ -122,7 +121,6 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
   },
-
   secondaryButton: {
     display: 'flex',
     alignItems: 'center',
@@ -136,7 +134,6 @@ const styles = {
     fontSize: '12px',
     cursor: 'pointer',
   },
-
   approveButton: {
     display: 'flex',
     alignItems: 'center',
@@ -150,7 +147,6 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
   },
-
   rejectButton: {
     display: 'flex',
     alignItems: 'center',
@@ -164,8 +160,7 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
   },
-
-  escalateButton: {
+  warningButton: {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
@@ -177,7 +172,6 @@ const styles = {
     fontSize: '12px',
     cursor: 'pointer',
   },
-
   sectionHeader: {
     display: 'flex',
     alignItems: 'center',
@@ -185,24 +179,20 @@ const styles = {
     gap: '12px',
     marginBottom: '15px',
   },
-
   sectionDivider: {
     marginTop: '32px',
     paddingTop: '25px',
     borderTop: '1px solid rgba(255, 255, 255, 0.10)',
   },
-
   queue: {
     display: 'grid',
     gap: '14px',
   },
-
   metadata: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: '7px',
   },
-
   badge: {
     padding: '5px 8px',
     borderRadius: '10px',
@@ -210,7 +200,6 @@ const styles = {
     background: 'rgba(255, 255, 255, 0.06)',
     fontSize: '10px',
   },
-
   pendingBadge: {
     padding: '5px 8px',
     borderRadius: '10px',
@@ -218,7 +207,6 @@ const styles = {
     background: 'rgba(239, 175, 89, 0.14)',
     fontSize: '10px',
   },
-
   urgentBadge: {
     padding: '5px 8px',
     borderRadius: '10px',
@@ -226,13 +214,11 @@ const styles = {
     background: 'rgba(224, 80, 96, 0.14)',
     fontSize: '10px',
   },
-
   postTitle: {
     margin: '13px 0 7px',
     color: '#fff0dc',
     fontSize: '18px',
   },
-
   postBody: {
     margin: 0,
     color: 'rgba(233, 222, 243, 0.75)',
@@ -241,7 +227,17 @@ const styles = {
     whiteSpace: 'pre-wrap',
     overflowWrap: 'anywhere',
   },
-
+  detailBox: {
+    marginTop: '12px',
+    padding: '12px',
+    borderRadius: '13px',
+    color: 'rgba(236, 224, 245, 0.76)',
+    background: 'rgba(255, 255, 255, 0.04)',
+    fontSize: '12px',
+    lineHeight: 1.65,
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'anywhere',
+  },
   actions: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -250,7 +246,6 @@ const styles = {
     paddingTop: '14px',
     borderTop: '1px solid rgba(255, 255, 255, 0.07)',
   },
-
   message: {
     marginBottom: '14px',
     padding: '11px 13px',
@@ -261,7 +256,6 @@ const styles = {
     fontSize: '12px',
     lineHeight: 1.55,
   },
-
   error: {
     marginBottom: '14px',
     padding: '11px 13px',
@@ -272,7 +266,6 @@ const styles = {
     fontSize: '12px',
     lineHeight: 1.55,
   },
-
   emptyCard: {
     padding: '24px 18px',
     border: '1px solid rgba(216, 194, 250, 0.14)',
@@ -281,7 +274,6 @@ const styles = {
     background: 'rgba(255, 255, 255, 0.045)',
     textAlign: 'center',
   },
-
   loadingCard: {
     display: 'flex',
     alignItems: 'center',
@@ -304,7 +296,6 @@ function LoginForm({ onLogin }) {
     event.preventDefault();
 
     const cleanEmail = email.trim();
-
     if (!cleanEmail || !password) {
       setErrorMessage('กรุณากรอกอีเมลและรหัสผ่าน');
       return;
@@ -314,23 +305,16 @@ function LoginForm({ onLogin }) {
     setErrorMessage('');
 
     try {
-      const { data, error } =
-        await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password,
-        });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
 
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       onLogin(data.session || null);
     } catch (error) {
       console.error('Admin login error:', error);
-
-      setErrorMessage(
-        'เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบอีเมลและรหัสผ่าน'
-      );
+      setErrorMessage('เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบอีเมลและรหัสผ่าน');
     } finally {
       setLoggingIn(false);
     }
@@ -339,78 +323,45 @@ function LoginForm({ onLogin }) {
   return (
     <section style={styles.loginCard}>
       <div style={{ textAlign: 'center' }}>
-        <Shield
-          size={40}
-          color="#ffd0a5"
-          style={{ marginBottom: '11px' }}
-        />
-
-        <h2
-          style={{
-            margin: 0,
-            color: '#fff0dc',
-            fontSize: '21px',
-          }}
-        >
+        <Shield size={40} color="#ffd0a5" style={{ marginBottom: '11px' }} />
+        <h2 style={{ margin: 0, color: '#fff0dc', fontSize: '21px' }}>
           เข้าสู่ระบบผู้ดูแล
         </h2>
-
-        <p style={styles.subtitle}>
-          สำหรับผู้ดูแลที่ได้รับอนุญาตเท่านั้น
-        </p>
+        <p style={styles.subtitle}>สำหรับผู้ดูแลที่ได้รับอนุญาตเท่านั้น</p>
       </div>
 
-      {errorMessage && (
-        <div style={styles.error}>
-          {errorMessage}
-        </div>
-      )}
+      {errorMessage && <div style={styles.error}>{errorMessage}</div>}
 
       <form onSubmit={handleLogin}>
-        <label
-          style={styles.label}
-          htmlFor="admin-email"
-        >
+        <label style={styles.label} htmlFor="admin-email">
           อีเมล
         </label>
-
         <input
           id="admin-email"
           type="email"
           autoComplete="username"
           style={styles.input}
           value={email}
-          onChange={(event) =>
-            setEmail(event.target.value)
-          }
+          onChange={(event) => setEmail(event.target.value)}
           placeholder="admin@example.com"
         />
 
-        <label
-          style={styles.label}
-          htmlFor="admin-password"
-        >
+        <label style={styles.label} htmlFor="admin-password">
           รหัสผ่าน
         </label>
-
         <input
           id="admin-password"
           type="password"
           autoComplete="current-password"
           style={styles.input}
           value={password}
-          onChange={(event) =>
-            setPassword(event.target.value)
-          }
+          onChange={(event) => setPassword(event.target.value)}
           placeholder="รหัสผ่านของผู้ดูแล"
         />
 
         <button
           type="submit"
-          style={{
-            ...styles.primaryButton,
-            opacity: loggingIn ? 0.55 : 1,
-          }}
+          style={{ ...styles.primaryButton, opacity: loggingIn ? 0.55 : 1 }}
           disabled={loggingIn}
         >
           {loggingIn ? (
@@ -443,60 +394,40 @@ function EmptyCard({ icon, text }) {
   return (
     <section style={styles.emptyCard}>
       {icon}
-      <p
-        style={{
-          margin: '10px 0 0',
-          fontSize: '13px',
-        }}
-      >
-        {text}
-      </p>
+      <p style={{ margin: '10px 0 0', fontSize: '13px' }}>{text}</p>
     </section>
   );
 }
 
 export default function AdminPage() {
   const [session, setSession] = useState(null);
-  const [checkingSession, setCheckingSession] =
-    useState(true);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const [queue, setQueue] = useState([]);
-  const [loadingQueue, setLoadingQueue] =
-    useState(false);
-  const [processingId, setProcessingId] =
-    useState('');
+  const [loadingQueue, setLoadingQueue] = useState(false);
+  const [processingId, setProcessingId] = useState('');
 
-  const [commentQueue, setCommentQueue] =
-    useState([]);
-  const [loadingComments, setLoadingComments] =
-    useState(false);
-  const [
-    processingCommentId,
-    setProcessingCommentId,
-  ] = useState('');
+  const [commentQueue, setCommentQueue] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [processingCommentId, setProcessingCommentId] = useState('');
+
+  const [reportQueue, setReportQueue] = useState([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [processingReportId, setProcessingReportId] = useState('');
 
   const [message, setMessage] = useState('');
   const [postError, setPostError] = useState('');
-  const [commentError, setCommentError] =
-    useState('');
+  const [commentError, setCommentError] = useState('');
+  const [reportError, setReportError] = useState('');
 
   useEffect(() => {
     let mounted = true;
 
     async function readSession() {
-      const { data, error } =
-        await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
 
-      if (!mounted) {
-        return;
-      }
-
-      if (error) {
-        console.error(
-          'Admin session error:',
-          error
-        );
-      }
+      if (!mounted) return;
+      if (error) console.error('Admin session error:', error);
 
       setSession(data?.session || null);
       setCheckingSession(false);
@@ -506,16 +437,11 @@ export default function AdminPage() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
-        if (!mounted) {
-          return;
-        }
-
-        setSession(nextSession || null);
-        setCheckingSession(false);
-      }
-    );
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!mounted) return;
+      setSession(nextSession || null);
+      setCheckingSession(false);
+    });
 
     return () => {
       mounted = false;
@@ -529,16 +455,13 @@ export default function AdminPage() {
     } else {
       setQueue([]);
       setCommentQueue([]);
+      setReportQueue([]);
     }
   }, [session]);
 
   async function loadAllQueues() {
     setMessage('');
-
-    await Promise.all([
-      loadQueue(),
-      loadCommentQueue(),
-    ]);
+    await Promise.all([loadQueue(), loadCommentQueue(), loadReportQueue()]);
   }
 
   async function loadQueue() {
@@ -550,19 +473,14 @@ export default function AdminPage() {
         .from('admin_moderation_queue')
         .select('*');
 
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       setQueue(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Admin queue error:', error);
-
       setPostError(
         error?.message ||
           'ไม่สามารถเปิดคิวตรวจสอบโพสต์ได้ บัญชีอาจไม่มีสิทธิ์ผู้ดูแล'
       );
-
       setQueue([]);
     } finally {
       setLoadingQueue(false);
@@ -578,45 +496,52 @@ export default function AdminPage() {
         .from('admin_comment_queue')
         .select('*');
 
-      if (error) {
-        throw error;
-      }
-
-      setCommentQueue(
-        Array.isArray(data) ? data : []
-      );
+      if (error) throw error;
+      setCommentQueue(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error(
-        'Comment queue error:',
-        error
-      );
-
+      console.error('Comment queue error:', error);
       setCommentError(
         error?.message ||
           'ไม่สามารถเปิดคิวความคิดเห็นได้ กรุณาตรวจสอบ View และสิทธิ์ผู้ดูแล'
       );
-
       setCommentQueue([]);
     } finally {
       setLoadingComments(false);
     }
   }
 
-  async function updateStory(
-    storyId,
-    nextStatus
-  ) {
+  async function loadReportQueue() {
+    setLoadingReports(true);
+    setReportError('');
+
+    try {
+      const { data, error } = await supabase
+        .from('admin_report_queue')
+        .select('*');
+
+      if (error) throw error;
+      setReportQueue(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Report queue error:', error);
+      setReportError(
+        error?.message ||
+          'ไม่สามารถเปิดคิวรายงานได้ กรุณาตรวจสอบ View และสิทธิ์ผู้ดูแล'
+      );
+      setReportQueue([]);
+    } finally {
+      setLoadingReports(false);
+    }
+  }
+
+  async function updateStory(storyId, nextStatus) {
     setProcessingId(storyId);
     setMessage('');
     setPostError('');
 
-    const changes = {
-      status: nextStatus,
-    };
+    const changes = { status: nextStatus };
 
     if (nextStatus === 'published') {
-      changes.published_at =
-        new Date().toISOString();
+      changes.published_at = new Date().toISOString();
       changes.risk_level = 'normal';
     } else {
       changes.published_at = null;
@@ -632,35 +557,19 @@ export default function AdminPage() {
         .update(changes)
         .eq('id', storyId);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (nextStatus === 'published') {
-        setMessage(
-          'อนุมัติและเผยแพร่เรื่องเรียบร้อยแล้ว'
-        );
+        setMessage('อนุมัติและเผยแพร่เรื่องเรียบร้อยแล้ว');
+      } else if (nextStatus === 'rejected') {
+        setMessage('ปฏิเสธเรื่องเรียบร้อยแล้ว');
+      } else if (nextStatus === 'escalated') {
+        setMessage('ย้ายเรื่องเข้าสู่คิวเร่งด่วนแล้ว');
       }
 
-      if (nextStatus === 'rejected') {
-        setMessage(
-          'ปฏิเสธเรื่องเรียบร้อยแล้ว'
-        );
-      }
-
-      if (nextStatus === 'escalated') {
-        setMessage(
-          'ย้ายเรื่องเข้าสู่คิวเร่งด่วนแล้ว'
-        );
-      }
-
-      await loadQueue();
+      await Promise.all([loadQueue(), loadReportQueue()]);
     } catch (error) {
-      console.error(
-        'Moderation update error:',
-        error
-      );
-
+      console.error('Moderation update error:', error);
       setPostError(
         error?.message ||
           'เปลี่ยนสถานะโพสต์ไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ผู้ดูแล'
@@ -670,10 +579,7 @@ export default function AdminPage() {
     }
   }
 
-  async function updateComment(
-    commentId,
-    nextStatus
-  ) {
+  async function updateComment(commentId, nextStatus) {
     setProcessingCommentId(commentId);
     setMessage('');
     setCommentError('');
@@ -681,34 +587,20 @@ export default function AdminPage() {
     try {
       const { error } = await supabase
         .from('comments')
-        .update({
-          status: nextStatus,
-        })
+        .update({ status: nextStatus })
         .eq('id', commentId);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      if (nextStatus === 'published') {
-        setMessage(
-          'อนุมัติความคิดเห็นเรียบร้อยแล้ว'
-        );
-      }
-
-      if (nextStatus === 'rejected') {
-        setMessage(
-          'ปฏิเสธความคิดเห็นเรียบร้อยแล้ว'
-        );
-      }
+      setMessage(
+        nextStatus === 'published'
+          ? 'อนุมัติความคิดเห็นเรียบร้อยแล้ว'
+          : 'ปฏิเสธความคิดเห็นเรียบร้อยแล้ว'
+      );
 
       await loadCommentQueue();
     } catch (error) {
-      console.error(
-        'Comment moderation error:',
-        error
-      );
-
+      console.error('Comment moderation error:', error);
       setCommentError(
         error?.message ||
           'เปลี่ยนสถานะความคิดเห็นไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ผู้ดูแล'
@@ -718,15 +610,122 @@ export default function AdminPage() {
     }
   }
 
+  async function updateReport(reportId, nextStatus) {
+    setProcessingReportId(reportId);
+    setMessage('');
+    setReportError('');
+
+    try {
+      const { error } = await supabase
+        .from('reports')
+        .update({ status: nextStatus })
+        .eq('id', reportId);
+
+      if (error) throw error;
+
+      if (nextStatus === 'reviewing') {
+        setMessage('รับรายงานเข้าสู่การตรวจสอบแล้ว');
+      } else if (nextStatus === 'resolved') {
+        setMessage('ปิดเคสรายงานเรียบร้อยแล้ว');
+      } else if (nextStatus === 'dismissed') {
+        setMessage('ยกเลิกรายงานเรียบร้อยแล้ว');
+      }
+
+      await loadReportQueue();
+    } catch (error) {
+      console.error('Report moderation error:', error);
+      setReportError(
+        error?.message ||
+          'เปลี่ยนสถานะรายงานไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ผู้ดูแล'
+      );
+    } finally {
+      setProcessingReportId('');
+    }
+  }
+
+  async function hideReportedStory(report) {
+    setProcessingReportId(report.id);
+    setMessage('');
+    setReportError('');
+
+    try {
+      const { error: storyError } = await supabase
+        .from('stories')
+        .update({
+          status: 'hidden',
+          published_at: null,
+        })
+        .eq('id', report.story_id);
+
+      if (storyError) throw storyError;
+
+      const { error: reportUpdateError } = await supabase
+        .from('reports')
+        .update({ status: 'resolved' })
+        .eq('id', report.id);
+
+      if (reportUpdateError) throw reportUpdateError;
+
+      setMessage('ซ่อนโพสต์และปิดเคสรายงานเรียบร้อยแล้ว');
+      await Promise.all([loadQueue(), loadReportQueue()]);
+    } catch (error) {
+      console.error('Hide reported story error:', error);
+      setReportError(
+        error?.message ||
+          'ซ่อนโพสต์ไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ผู้ดูแล'
+      );
+    } finally {
+      setProcessingReportId('');
+    }
+  }
+
+  async function escalateReportedStory(report) {
+    setProcessingReportId(report.id);
+    setMessage('');
+    setReportError('');
+
+    try {
+      const { error: storyError } = await supabase
+        .from('stories')
+        .update({
+          status: 'escalated',
+          risk_level: 'urgent',
+          published_at: null,
+        })
+        .eq('id', report.story_id);
+
+      if (storyError) throw storyError;
+
+      const { error: reportUpdateError } = await supabase
+        .from('reports')
+        .update({ status: 'reviewing' })
+        .eq('id', report.id);
+
+      if (reportUpdateError) throw reportUpdateError;
+
+      setMessage('ส่งโพสต์เข้าคิวเร่งด่วนและรับรายงานเข้าสู่การตรวจสอบแล้ว');
+      await Promise.all([loadQueue(), loadReportQueue()]);
+    } catch (error) {
+      console.error('Escalate reported story error:', error);
+      setReportError(
+        error?.message ||
+          'ส่งโพสต์เข้าคิวเร่งด่วนไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ผู้ดูแล'
+      );
+    } finally {
+      setProcessingReportId('');
+    }
+  }
+
   async function logout() {
     await supabase.auth.signOut();
-
     setSession(null);
     setQueue([]);
     setCommentQueue([]);
+    setReportQueue([]);
     setMessage('');
     setPostError('');
     setCommentError('');
+    setReportError('');
   }
 
   if (checkingSession) {
@@ -744,58 +743,33 @@ export default function AdminPage() {
       <div style={styles.container}>
         <header style={styles.header}>
           <div style={styles.brand}>
-            <Moon
-              size={30}
-              color="#ffd09d"
-            />
-
+            <Moon size={30} color="#ffd09d" />
             <div>
-              <h1 style={styles.title}>
-                แสงที่ไม่มีชื่อ
-              </h1>
-
-              <p style={styles.subtitle}>
-                ระบบตรวจสอบเนื้อหา
-              </p>
+              <h1 style={styles.title}>แสงที่ไม่มีชื่อ</h1>
+              <p style={styles.subtitle}>ระบบตรวจสอบเนื้อหา</p>
             </div>
           </div>
 
           {session && (
-            <button
-              type="button"
-              style={styles.secondaryButton}
-              onClick={logout}
-            >
+            <button type="button" style={styles.secondaryButton} onClick={logout}>
               <LogOut size={15} />
               ออกจากระบบ
             </button>
           )}
         </header>
 
-        {!session && (
-          <LoginForm onLogin={setSession} />
-        )}
+        {!session && <LoginForm onLogin={setSession} />}
 
         {session && (
           <>
-            {message && (
-              <div style={styles.message}>
-                {message}
-              </div>
-            )}
+            {message && <div style={styles.message}>{message}</div>}
 
             <section>
               <div style={styles.sectionHeader}>
                 <div>
-                  <strong>
-                    คิวโพสต์รอตรวจสอบ
-                  </strong>
-
-                  <div style={styles.subtitle}>
-                    {queue?.length || 0} รายการ
-                  </div>
+                  <strong>คิวโพสต์รอตรวจสอบ</strong>
+                  <div style={styles.subtitle}>{queue.length} รายการ</div>
                 </div>
-
                 <button
                   type="button"
                   style={styles.secondaryButton}
@@ -807,166 +781,102 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              {postError && (
-                <div style={styles.error}>
-                  {postError}
-                </div>
+              {postError && <div style={styles.error}>{postError}</div>}
+              {loadingQueue && <LoadingCard text="กำลังโหลดคิวโพสต์..." />}
+
+              {!loadingQueue && !postError && queue.length === 0 && (
+                <EmptyCard
+                  icon={<Shield size={27} color="#bfaed5" />}
+                  text="ไม่มีเรื่องที่รอตรวจสอบ"
+                />
               )}
 
-              {loadingQueue && (
-                <LoadingCard text="กำลังโหลดคิวโพสต์..." />
+              {!loadingQueue && !postError && queue.length > 0 && (
+                <section style={styles.queue}>
+                  {queue.map((story) => {
+                    const isProcessing = processingId === story.id;
+
+                    return (
+                      <article key={story.id} style={styles.card}>
+                        <div style={styles.metadata}>
+                          <span style={styles.badge}>
+                            {CATEGORY_NAMES[story.category] || 'อื่น ๆ'}
+                          </span>
+                          <span
+                            style={
+                              story.status === 'escalated'
+                                ? styles.urgentBadge
+                                : styles.pendingBadge
+                            }
+                          >
+                            {story.status}
+                          </span>
+                          <span style={styles.badge}>
+                            ความเสี่ยง: {story.risk_level || 'normal'}
+                          </span>
+                        </div>
+
+                        <h2 style={styles.postTitle}>
+                          {story.title || 'ไม่มีชื่อเรื่อง'}
+                        </h2>
+                        <p style={styles.postBody}>{story.body}</p>
+                        <p style={styles.subtitle}>
+                          ผู้เขียน: {story.nickname || 'แสงนิรนาม'}
+                        </p>
+
+                        <div style={styles.actions}>
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.approveButton,
+                              opacity: isProcessing ? 0.5 : 1,
+                            }}
+                            disabled={isProcessing}
+                            onClick={() => updateStory(story.id, 'published')}
+                          >
+                            <Check size={15} />
+                            อนุมัติ
+                          </button>
+
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.rejectButton,
+                              opacity: isProcessing ? 0.5 : 1,
+                            }}
+                            disabled={isProcessing}
+                            onClick={() => updateStory(story.id, 'rejected')}
+                          >
+                            <X size={15} />
+                            ปฏิเสธ
+                          </button>
+
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.warningButton,
+                              opacity: isProcessing ? 0.5 : 1,
+                            }}
+                            disabled={isProcessing}
+                            onClick={() => updateStory(story.id, 'escalated')}
+                          >
+                            <AlertTriangle size={15} />
+                            คิวเร่งด่วน
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </section>
               )}
-
-              {!loadingQueue &&
-                !postError &&
-                queue.length === 0 && (
-                  <EmptyCard
-                    icon={
-                      <Shield
-                        size={27}
-                        color="#bfaed5"
-                      />
-                    }
-                    text="ไม่มีเรื่องที่รอตรวจสอบ"
-                  />
-                )}
-
-              {!loadingQueue &&
-                !postError &&
-                queue.length > 0 && (
-                  <section style={styles.queue}>
-                    {queue.map((story) => {
-                      const isProcessing =
-                        processingId === story.id;
-
-                      return (
-                        <article
-                          key={story.id}
-                          style={styles.card}
-                        >
-                          <div style={styles.metadata}>
-                            <span style={styles.badge}>
-                              {CATEGORY_NAMES[
-                                story.category
-                              ] || 'อื่น ๆ'}
-                            </span>
-
-                            <span
-                              style={
-                                story.status ===
-                                'escalated'
-                                  ? styles.urgentBadge
-                                  : styles.pendingBadge
-                              }
-                            >
-                              {story.status}
-                            </span>
-
-                            <span style={styles.badge}>
-                              ความเสี่ยง:{' '}
-                              {story.risk_level ||
-                                'normal'}
-                            </span>
-                          </div>
-
-                          <h2 style={styles.postTitle}>
-                            {story.title ||
-                              'ไม่มีชื่อเรื่อง'}
-                          </h2>
-
-                          <p style={styles.postBody}>
-                            {story.body}
-                          </p>
-
-                          <p style={styles.subtitle}>
-                            ผู้เขียน:{' '}
-                            {story.nickname ||
-                              'แสงนิรนาม'}
-                          </p>
-
-                          <div style={styles.actions}>
-                            <button
-                              type="button"
-                              style={{
-                                ...styles.approveButton,
-                                opacity: isProcessing
-                                  ? 0.5
-                                  : 1,
-                              }}
-                              disabled={isProcessing}
-                              onClick={() =>
-                                updateStory(
-                                  story.id,
-                                  'published'
-                                )
-                              }
-                            >
-                              <Check size={15} />
-                              อนุมัติ
-                            </button>
-
-                            <button
-                              type="button"
-                              style={{
-                                ...styles.rejectButton,
-                                opacity: isProcessing
-                                  ? 0.5
-                                  : 1,
-                              }}
-                              disabled={isProcessing}
-                              onClick={() =>
-                                updateStory(
-                                  story.id,
-                                  'rejected'
-                                )
-                              }
-                            >
-                              <X size={15} />
-                              ปฏิเสธ
-                            </button>
-
-                            <button
-                              type="button"
-                              style={{
-                                ...styles.escalateButton,
-                                opacity: isProcessing
-                                  ? 0.5
-                                  : 1,
-                              }}
-                              disabled={isProcessing}
-                              onClick={() =>
-                                updateStory(
-                                  story.id,
-                                  'escalated'
-                                )
-                              }
-                            >
-                              <AlertTriangle
-                                size={15}
-                              />
-                              คิวเร่งด่วน
-                            </button>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </section>
-                )}
             </section>
 
             <section style={styles.sectionDivider}>
               <div style={styles.sectionHeader}>
                 <div>
-                  <strong>
-                    ความคิดเห็นรอตรวจสอบ
-                  </strong>
-
-                  <div style={styles.subtitle}>
-                    {commentQueue?.length || 0}{' '}
-                    รายการ
-                  </div>
+                  <strong>ความคิดเห็นรอตรวจสอบ</strong>
+                  <div style={styles.subtitle}>{commentQueue.length} รายการ</div>
                 </div>
-
                 <button
                   type="button"
                   style={styles.secondaryButton}
@@ -978,133 +888,209 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              {commentError && (
-                <div style={styles.error}>
-                  {commentError}
-                </div>
-              )}
-
+              {commentError && <div style={styles.error}>{commentError}</div>}
               {loadingComments && (
                 <LoadingCard text="กำลังโหลดความคิดเห็น..." />
               )}
 
-              {!loadingComments &&
-                !commentError &&
-                commentQueue.length === 0 && (
-                  <EmptyCard
-                    icon={
-                      <MessageCircle
-                        size={27}
-                        color="#bfaed5"
-                      />
-                    }
-                    text="ไม่มีความคิดเห็นที่รอตรวจสอบ"
-                  />
-                )}
+              {!loadingComments && !commentError && commentQueue.length === 0 && (
+                <EmptyCard
+                  icon={<MessageCircle size={27} color="#bfaed5" />}
+                  text="ไม่มีความคิดเห็นที่รอตรวจสอบ"
+                />
+              )}
 
-              {!loadingComments &&
-                !commentError &&
-                commentQueue.length > 0 && (
-                  <section style={styles.queue}>
-                    {commentQueue.map(
-                      (comment) => {
-                        const isProcessing =
-                          processingCommentId ===
-                          comment.id;
+              {!loadingComments && !commentError && commentQueue.length > 0 && (
+                <section style={styles.queue}>
+                  {commentQueue.map((comment) => {
+                    const isProcessing = processingCommentId === comment.id;
 
-                        return (
-                          <article
-                            key={comment.id}
-                            style={styles.card}
+                    return (
+                      <article key={comment.id} style={styles.card}>
+                        <div style={styles.metadata}>
+                          <span style={styles.pendingBadge}>pending</span>
+                          <span style={styles.badge}>
+                            เรื่อง: {comment.story_title || 'ไม่พบชื่อเรื่อง'}
+                          </span>
+                        </div>
+
+                        <p style={{ ...styles.postBody, marginTop: '14px' }}>
+                          {comment.text}
+                        </p>
+                        <p style={styles.subtitle}>
+                          ผู้ส่ง: {comment.nickname || 'แสงนิรนาม'}
+                        </p>
+
+                        <div style={styles.actions}>
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.approveButton,
+                              opacity: isProcessing ? 0.5 : 1,
+                            }}
+                            disabled={isProcessing}
+                            onClick={() =>
+                              updateComment(comment.id, 'published')
+                            }
                           >
-                            <div
-                              style={styles.metadata}
-                            >
-                              <span
-                                style={
-                                  styles.pendingBadge
-                                }
-                              >
-                                pending
-                              </span>
+                            <Check size={15} />
+                            อนุมัติความคิดเห็น
+                          </button>
 
-                              <span
-                                style={styles.badge}
-                              >
-                                เรื่อง:{' '}
-                                {comment.story_title ||
-                                  'ไม่พบชื่อเรื่อง'}
-                              </span>
-                            </div>
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.rejectButton,
+                              opacity: isProcessing ? 0.5 : 1,
+                            }}
+                            disabled={isProcessing}
+                            onClick={() =>
+                              updateComment(comment.id, 'rejected')
+                            }
+                          >
+                            <X size={15} />
+                            ปฏิเสธ
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </section>
+              )}
+            </section>
 
-                            <p
+            <section style={styles.sectionDivider}>
+              <div style={styles.sectionHeader}>
+                <div>
+                  <strong>รายงานเนื้อหารอตรวจสอบ</strong>
+                  <div style={styles.subtitle}>{reportQueue.length} รายการ</div>
+                </div>
+                <button
+                  type="button"
+                  style={styles.secondaryButton}
+                  onClick={loadReportQueue}
+                  disabled={loadingReports}
+                >
+                  <RefreshCw size={15} />
+                  โหลดใหม่
+                </button>
+              </div>
+
+              {reportError && <div style={styles.error}>{reportError}</div>}
+              {loadingReports && <LoadingCard text="กำลังโหลดรายงาน..." />}
+
+              {!loadingReports && !reportError && reportQueue.length === 0 && (
+                <EmptyCard
+                  icon={<Flag size={27} color="#bfaed5" />}
+                  text="ไม่มีรายงานเนื้อหาที่รอตรวจสอบ"
+                />
+              )}
+
+              {!loadingReports && !reportError && reportQueue.length > 0 && (
+                <section style={styles.queue}>
+                  {reportQueue.map((report) => {
+                    const isProcessing = processingReportId === report.id;
+
+                    return (
+                      <article key={report.id} style={styles.card}>
+                        <div style={styles.metadata}>
+                          <span style={styles.urgentBadge}>
+                            {REPORT_REASON_NAMES[report.reason] || report.reason}
+                          </span>
+                          <span style={styles.badge}>{report.status}</span>
+                          <span style={styles.badge}>
+                            {CATEGORY_NAMES[report.story_category] || 'อื่น ๆ'}
+                          </span>
+                        </div>
+
+                        <h2 style={styles.postTitle}>
+                          {report.story_title || 'ไม่พบชื่อเรื่อง'}
+                        </h2>
+                        <p style={styles.postBody}>{report.story_body}</p>
+                        <p style={styles.subtitle}>
+                          ผู้เขียน: {report.story_nickname || 'แสงนิรนาม'}
+                        </p>
+
+                        <div style={styles.detailBox}>
+                          <strong>รายละเอียดจากผู้รายงาน</strong>
+                          <div style={{ marginTop: '5px' }}>
+                            {report.details || 'ไม่มีรายละเอียดเพิ่มเติม'}
+                          </div>
+                        </div>
+
+                        <div style={styles.actions}>
+                          {report.status === 'open' && (
+                            <button
+                              type="button"
                               style={{
-                                ...styles.postBody,
-                                marginTop: '14px',
+                                ...styles.warningButton,
+                                opacity: isProcessing ? 0.5 : 1,
                               }}
+                              disabled={isProcessing}
+                              onClick={() => updateReport(report.id, 'reviewing')}
                             >
-                              {comment.text}
-                            </p>
+                              <RefreshCw size={15} />
+                              รับตรวจสอบ
+                            </button>
+                          )}
 
-                            <p
-                              style={styles.subtitle}
-                            >
-                              ผู้ส่ง:{' '}
-                              {comment.nickname ||
-                                'แสงนิรนาม'}
-                            </p>
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.rejectButton,
+                              opacity: isProcessing ? 0.5 : 1,
+                            }}
+                            disabled={isProcessing}
+                            onClick={() => hideReportedStory(report)}
+                          >
+                            <EyeOff size={15} />
+                            ซ่อนโพสต์และปิดเคส
+                          </button>
 
-                            <div
-                              style={styles.actions}
-                            >
-                              <button
-                                type="button"
-                                style={{
-                                  ...styles.approveButton,
-                                  opacity:
-                                    isProcessing
-                                      ? 0.5
-                                      : 1,
-                                }}
-                                disabled={isProcessing}
-                                onClick={() =>
-                                  updateComment(
-                                    comment.id,
-                                    'published'
-                                  )
-                                }
-                              >
-                                <Check size={15} />
-                                อนุมัติความคิดเห็น
-                              </button>
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.warningButton,
+                              opacity: isProcessing ? 0.5 : 1,
+                            }}
+                            disabled={isProcessing}
+                            onClick={() => escalateReportedStory(report)}
+                          >
+                            <AlertTriangle size={15} />
+                            คิวเร่งด่วน
+                          </button>
 
-                              <button
-                                type="button"
-                                style={{
-                                  ...styles.rejectButton,
-                                  opacity:
-                                    isProcessing
-                                      ? 0.5
-                                      : 1,
-                                }}
-                                disabled={isProcessing}
-                                onClick={() =>
-                                  updateComment(
-                                    comment.id,
-                                    'rejected'
-                                  )
-                                }
-                              >
-                                <X size={15} />
-                                ปฏิเสธ
-                              </button>
-                            </div>
-                          </article>
-                        );
-                      }
-                    )}
-                  </section>
-                )}
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.secondaryButton,
+                              opacity: isProcessing ? 0.5 : 1,
+                            }}
+                            disabled={isProcessing}
+                            onClick={() => updateReport(report.id, 'dismissed')}
+                          >
+                            <X size={15} />
+                            ยกเลิกรายงาน
+                          </button>
+
+                          <button
+                            type="button"
+                            style={{
+                              ...styles.approveButton,
+                              opacity: isProcessing ? 0.5 : 1,
+                            }}
+                            disabled={isProcessing}
+                            onClick={() => updateReport(report.id, 'resolved')}
+                          >
+                            <Check size={15} />
+                            ปิดเคส
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </section>
+              )}
             </section>
           </>
         )}
