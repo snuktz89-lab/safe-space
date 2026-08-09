@@ -357,6 +357,7 @@ export default function AdminPage() {
   const [session, setSession] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [queue, setQueue] = useState([]);
+  const [commentQueue, setCommentQueue] = useState([]);
   const [loadingQueue, setLoadingQueue] = useState(false);
   const [processingId, setProcessingId] = useState('');
   const [message, setMessage] = useState('');
@@ -387,8 +388,10 @@ export default function AdminPage() {
   useEffect(() => {
     if (session) {
       loadQueue();
+      loadCommentQueue();
     } else {
       setQueue([]);
+      setCommentQueue([]);
     }
   }, [session]);
 
@@ -417,7 +420,65 @@ export default function AdminPage() {
 
     setQueue(data || []);
   }
-
+  async function loadCommentQueue() {
+    setLoadingComments(true);
+    setErrorMessage('');
+  
+    const { data, error } = await supabase
+      .from('admin_comment_queue')
+      .select('*');
+  
+    setLoadingComments(false);
+    async function updateComment(commentId, nextStatus) {
+        setProcessingCommentId(commentId);
+        setErrorMessage('');
+        setMessage('');
+      
+        const { error } = await supabase
+          .from('comments')
+          .update({
+            status: nextStatus,
+          })
+          .eq('id', commentId);
+      
+        setProcessingCommentId('');
+      
+        if (error) {
+          console.error('Comment moderation error:', error);
+      
+          setErrorMessage(
+            error.message ||
+              'เปลี่ยนสถานะความคิดเห็นไม่สำเร็จ กรุณาตรวจสอบสิทธิ์ผู้ดูแล'
+          );
+      
+          return;
+        }
+      
+        if (nextStatus === 'published') {
+          setMessage('อนุมัติความคิดเห็นเรียบร้อยแล้ว');
+        }
+      
+        if (nextStatus === 'rejected') {
+          setMessage('ปฏิเสธความคิดเห็นเรียบร้อยแล้ว');
+        }
+      
+        await loadCommentQueue();
+      }
+      ``
+    if (error) {
+      console.error('Comment queue error:', error);
+  
+      setErrorMessage(
+        error.message ||
+          'ไม่สามารถเปิดคิวความคิดเห็นได้ กรุณาตรวจสอบสิทธิ์ผู้ดูแล'
+      );
+  
+      setCommentQueue([]);
+      return;
+    }
+  
+    setCommentQueue(data || []);
+  }
   async function updateStory(storyId, nextStatus) {
     setProcessingId(storyId);
     setErrorMessage('');
@@ -586,6 +647,7 @@ export default function AdminPage() {
                     ไม่มีเรื่องที่รอตรวจสอบ
                   </p>
                 </section>
+                
               )}
 
             {!loadingQueue && (
@@ -688,7 +750,141 @@ export default function AdminPage() {
                   );
                 })}
               </section>
+              
             )}
+            <div
+  style={{
+    marginTop: '30px',
+    marginBottom: '15px',
+    paddingTop: '24px',
+    borderTop: '1px solid rgba(255,255,255,0.10)',
+  }}
+>
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '12px',
+      marginBottom: '15px',
+    }}
+  >
+    <div>
+      <strong>ความคิดเห็นรอตรวจสอบ</strong>
+
+      <div style={styles.subtitle}>
+        {commentQueue.length} รายการ
+      </div>
+    </div>
+
+    <button
+      type="button"
+      style={styles.secondaryButton}
+      onClick={loadCommentQueue}
+      disabled={loadingComments}
+    >
+      <RefreshCw size={15} />
+      โหลดใหม่
+    </button>
+  </div>
+
+  {loadingComments && (
+    <section style={styles.card}>
+      <LoaderCircle size={24} />
+      <p>กำลังโหลดความคิดเห็น...</p>
+    </section>
+  )}
+
+  {!loadingComments && commentQueue.length === 0 && (
+    <section style={styles.card}>
+      <MessageCircle size={25} color="#bfaed5" />
+
+      <p
+        style={{
+          marginBottom: 0,
+          color: 'rgba(230, 216, 243, 0.62)',
+        }}
+      >
+        ไม่มีความคิดเห็นที่รอตรวจสอบ
+      </p>
+    </section>
+  )}
+
+  {!loadingComments && (
+    <section style={styles.queue}>
+      {commentQueue.map((comment) => {
+        const isProcessing =
+          processingCommentId === comment.id;
+
+        return (
+          <article key={comment.id} style={styles.card}>
+            <div style={styles.metadata}>
+              <span style={styles.pendingBadge}>
+                pending
+              </span>
+
+              <span style={styles.badge}>
+                เรื่อง: {comment.story_title}
+              </span>
+            </div>
+
+            <p
+              style={{
+                ...styles.postBody,
+                marginTop: '14px',
+              }}
+            >
+              {comment.text}
+            </p>
+
+            <p style={styles.subtitle}>
+              ผู้ส่ง: {comment.nickname}
+            </p>
+
+            <div style={styles.actions}>
+              <button
+                type="button"
+                style={{
+                  ...styles.approveButton,
+                  opacity: isProcessing ? 0.5 : 1,
+                }}
+                disabled={isProcessing}
+                onClick={() =>
+                  updateComment(
+                    comment.id,
+                    'published'
+                  )
+                }
+              >
+                <Check size={15} />
+                อนุมัติความคิดเห็น
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  ...styles.rejectButton,
+                  opacity: isProcessing ? 0.5 : 1,
+                }}
+                disabled={isProcessing}
+                onClick={() =>
+                  updateComment(
+                    comment.id,
+                    'rejected'
+                  )
+                }
+              >
+                <X size={15} />
+                ปฏิเสธ
+              </button>
+            </div>
+          </article>
+        );
+      })}
+    </section>
+  )}
+</div>
+`
           </>
         )}
       </div>
