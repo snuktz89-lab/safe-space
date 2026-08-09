@@ -45,7 +45,35 @@ const NICKNAME_CHOICES = [
   'แสงแรก',
   'เมฆขาว',
 ];
+function getAnonymousSessionId() {
+  const storageKey = 'safelight-session-id';
 
+  try {
+    const existingSessionId =
+      window.localStorage.getItem(storageKey);
+
+    if (existingSessionId) {
+      return existingSessionId;
+    }
+
+    const newSessionId =
+      window.crypto.randomUUID();
+
+    window.localStorage.setItem(
+      storageKey,
+      newSessionId
+    );
+
+    return newSessionId;
+  } catch (error) {
+    console.error(
+      'Cannot create anonymous session:',
+      error
+    );
+
+    return window.crypto.randomUUID();
+  }
+}
 function createNickname() {
   const name =
     NICKNAME_CHOICES[
@@ -238,7 +266,7 @@ function StoryCard({
           />
 
           <span>
-            {(story.heart_count || 0) + (liked ? 1 : 0)}
+            {Number(story.heart_count || 0)}
           </span>
 
           <span>ส่งกำลังใจ</span>
@@ -558,7 +586,9 @@ export default function App() {
   const [nickname, setNickname] = useState(
     createNickname()
   );
-
+const [anonymousSessionId] = useState(
+  getAnonymousSessionId
+);
   const [likedStoryIds, setLikedStoryIds] =
     useState([]);
 
@@ -581,7 +611,33 @@ export default function App() {
     body: '',
     consent: false,
   });
+async function loadSessionReactions() {
+  try {
+    const { data, error } = await supabase.rpc(
+      'get_session_reactions',
+      {
+        p_session_id: anonymousSessionId,
+      }
+    );
 
+    if (error) {
+      throw error;
+    }
+
+    const likedIds = (data || []).map(
+      (reaction) => reaction.story_id
+    );
+
+    setLikedStoryIds(likedIds);
+  } catch (error) {
+    console.error(
+      'โหลดสถานะหัวใจไม่สำเร็จ:',
+      error
+    );
+
+    setLikedStoryIds([]);
+  }
+}
   async function loadStories() {
     setLoading(true);
     setLoadError('');
@@ -666,8 +722,15 @@ export default function App() {
   }
 
   useEffect(() => {
-    loadStories();
-  }, []);
+  async function initializeFeed() {
+    await Promise.all([
+      loadStories(),
+      loadSessionReactions(),
+    ]);
+  }
+
+  initializeFeed();
+}, []);
 
   const visibleStories =
     filter === 'all'
@@ -753,17 +816,65 @@ export default function App() {
     }
   }
 
-  function toggleHeart(storyId) {
+  async function toggleHeart(storyId) {
+  setNotice('');
+
+  try {
+    const { data, error } = await supabase.rpc(
+      'toggle_story_reaction',
+      {
+        p_story_id: storyId,
+        p_session_id: anonymousSessionId,
+      }
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    const isLiked =
+      data?.liked === true;
+
+    const nextHeartCount =
+      Number(data?.heart_count || 0);
+
     setLikedStoryIds((currentIds) => {
-      if (currentIds.includes(storyId)) {
-        return currentIds.filter(
-          (id) => id !== storyId
-        );
+      if (isLiked) {
+        if (currentIds.includes(storyId)) {
+          return currentIds;
+        }
+
+        return [...currentIds, storyId];
       }
 
-      return [...currentIds, storyId];
+      return currentIds.filter(
+        (id) => id !== storyId
+      );
     });
+
+    setStories((currentStories) =>
+      currentStories.map((story) => {
+        if (story.id !== storyId) {
+          return story;
+        }
+
+        return {
+          ...story,
+          heart_count: nextHeartCount,
+        };
+      })
+    );
+  } catch (error) {
+    console.error(
+      'ส่งกำลังใจไม่สำเร็จ:',
+      error
+    );
+
+    setNotice(
+      'ยังส่งกำลังใจไม่ได้ กรุณาลองใหม่อีกครั้ง'
+    );
   }
+}
 
   async function submitComment(storyId) {
     const commentText = (
