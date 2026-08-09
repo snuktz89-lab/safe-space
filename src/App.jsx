@@ -33,28 +33,7 @@ const CATEGORY_NAMES = {
   family: 'ครอบครัว / คนใกล้ตัว',
   other: 'อื่น ๆ',
 };
-const REPORT_REASONS = [
-  {
-    id: 'bullying',
-    label: 'มีการกลั่นแกล้งหรือคุกคาม',
-  },
-  {
-    id: 'personal_information',
-    label: 'เปิดเผยข้อมูลส่วนบุคคล',
-  },
-  {
-    id: 'harmful_content',
-    label: 'เนื้อหาอาจก่อให้เกิดอันตราย',
-  },
-  {
-    id: 'spam',
-    label: 'สแปมหรือเนื้อหาไม่เกี่ยวข้อง',
-  },
-  {
-    id: 'other',
-    label: 'เหตุผลอื่น',
-  },
-];
+
 const NICKNAME_CHOICES = [
   'ดาวเหนือ',
   'แสงเทียน',
@@ -67,87 +46,72 @@ const NICKNAME_CHOICES = [
   'แสงแรก',
   'เมฆขาว',
 ];
+
+const REPORT_REASONS = [
+  { id: 'bullying', label: 'มีการกลั่นแกล้งหรือคุกคาม' },
+  { id: 'personal_information', label: 'เปิดเผยข้อมูลส่วนบุคคล' },
+  { id: 'harmful_content', label: 'เนื้อหาอาจก่อให้เกิดอันตราย' },
+  { id: 'spam', label: 'สแปมหรือเนื้อหาไม่เกี่ยวข้อง' },
+  { id: 'other', label: 'เหตุผลอื่น' },
+];
+
 function getAnonymousSessionId() {
   const storageKey = 'safelight-session-id';
 
   try {
-    const existingSessionId =
-      window.localStorage.getItem(storageKey);
+    const existingSessionId = window.localStorage.getItem(storageKey);
 
     if (existingSessionId) {
       return existingSessionId;
     }
 
-    const newSessionId =
-      window.crypto.randomUUID();
-
-    window.localStorage.setItem(
-      storageKey,
-      newSessionId
-    );
-
+    const newSessionId = window.crypto.randomUUID();
+    window.localStorage.setItem(storageKey, newSessionId);
     return newSessionId;
   } catch (error) {
-    console.error(
-      'Cannot create anonymous session:',
-      error
-    );
-
+    console.error('Cannot create anonymous session:', error);
     return window.crypto.randomUUID();
   }
 }
+
 function createNickname() {
   const name =
     NICKNAME_CHOICES[
       Math.floor(Math.random() * NICKNAME_CHOICES.length)
     ];
-
   const number = Math.floor(100 + Math.random() * 900);
-
   return `${name} #${number}`;
 }
 
 function formatTime(timestamp) {
-  if (!timestamp) {
-    return '';
-  }
+  if (!timestamp) return '';
 
   const date = new Date(timestamp);
-
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
+  if (Number.isNaN(date.getTime())) return '';
 
   const seconds = Math.max(
     0,
     Math.floor((Date.now() - date.getTime()) / 1000)
   );
 
-  if (seconds < 60) {
-    return 'เมื่อสักครู่';
-  }
-
-  if (seconds < 3600) {
-    return `${Math.floor(seconds / 60)} นาทีที่แล้ว`;
-  }
-
-  if (seconds < 86400) {
-    return `${Math.floor(seconds / 3600)} ชั่วโมงที่แล้ว`;
-  }
-
+  if (seconds < 60) return 'เมื่อสักครู่';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} นาทีที่แล้ว`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} ชั่วโมงที่แล้ว`;
   return `${Math.floor(seconds / 86400)} วันที่แล้ว`;
 }
 
 function StarBackground() {
-  const stars = useMemo(() => {
-    return Array.from({ length: 36 }, (_, index) => ({
-      id: index,
-      top: Math.random() * 100,
-      left: Math.random() * 100,
-      size: Math.random() * 2 + 1,
-      delay: Math.random() * 4,
-    }));
-  }, []);
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 36 }, (_, index) => ({
+        id: index,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        size: Math.random() * 2 + 1,
+        delay: Math.random() * 4,
+      })),
+    []
+  );
 
   return (
     <div className="star-background" aria-hidden="true">
@@ -171,11 +135,7 @@ function StarBackground() {
 function LoadingView() {
   return (
     <section className="empty-state">
-      <LoaderCircle
-        size={30}
-        className="loading-spinner"
-      />
-
+      <LoaderCircle size={30} className="loading-spinner" />
       <p>กำลังเปิดพื้นที่แห่งแสง...</p>
     </section>
   );
@@ -185,17 +145,144 @@ function ErrorView({ message, onRetry }) {
   return (
     <section className="empty-state">
       <RefreshCw size={30} />
-
       <p>{message}</p>
-
-      <button
-        type="button"
-        className="retry-button"
-        onClick={onRetry}
-      >
+      <button type="button" className="retry-button" onClick={onRetry}>
         ลองใหม่
       </button>
     </section>
+  );
+}
+
+function ReportModal({ story, submitting, onClose, onSubmit }) {
+  const [reason, setReason] = useState('');
+  const [details, setDetails] = useState('');
+
+  if (!story) return null;
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    if (!reason || submitting) return;
+
+    onSubmit({
+      storyId: story.id,
+      reason,
+      details: details.trim(),
+    });
+  }
+
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true">
+      <section className="support-modal">
+        <button
+          type="button"
+          className="modal-close"
+          onClick={onClose}
+          disabled={submitting}
+          aria-label="ปิดหน้ารายงาน"
+        >
+          <X size={20} />
+        </button>
+
+        <Flag className="support-icon" size={30} />
+        <h2>รายงานเนื้อหา</h2>
+        <p>เรื่อง: {story.title}</p>
+        <p>
+          รายงานจะถูกส่งให้ผู้ดูแลตรวจสอบ โดยไม่เปิดเผยต่อผู้เขียน
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <label className="field-label">เหตุผลที่รายงาน</label>
+
+          <div className="report-reason-list">
+            {REPORT_REASONS.map((item) => (
+              <label
+                key={item.id}
+                className={
+                  reason === item.id
+                    ? 'report-reason selected'
+                    : 'report-reason'
+                }
+              >
+                <input
+                  type="radio"
+                  name="report-reason"
+                  value={item.id}
+                  checked={reason === item.id}
+                  disabled={submitting}
+                  onChange={(event) => setReason(event.target.value)}
+                />
+                <span>{item.label}</span>
+              </label>
+            ))}
+          </div>
+
+          <label className="field-label" htmlFor="report-details">
+            รายละเอียดเพิ่มเติม <span>ไม่บังคับ</span>
+          </label>
+
+          <textarea
+            id="report-details"
+            className="form-input story-textarea"
+            rows={4}
+            maxLength={500}
+            value={details}
+            disabled={submitting}
+            placeholder="อธิบายเพิ่มเติมเพื่อช่วยให้ผู้ดูแลตรวจสอบ..."
+            onChange={(event) => setDetails(event.target.value)}
+          />
+
+          <div className="character-count">{details.length}/500</div>
+
+          <button
+            type="submit"
+            className="submit-story-button"
+            disabled={!reason || submitting}
+          >
+            {submitting ? (
+              <>
+                <LoaderCircle size={17} className="loading-spinner" />
+                กำลังส่งรายงาน...
+              </>
+            ) : (
+              <>
+                <Flag size={17} />
+                ส่งรายงานให้ผู้ดูแล
+              </>
+            )}
+          </button>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+function SupportModal({ onClose }) {
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true">
+      <section className="support-modal">
+        <button
+          type="button"
+          className="modal-close"
+          onClick={onClose}
+          aria-label="ปิด"
+        >
+          <X size={20} />
+        </button>
+
+        <Phone className="support-icon" size={30} />
+        <h2>คุณไม่จำเป็นต้องผ่านเรื่องนี้คนเดียว</h2>
+        <p>
+          หากรู้สึกไม่ปลอดภัยหรือต้องการพูดคุยกับใครสักคนในตอนนี้
+          โปรดติดต่อบุคคลที่ไว้ใจได้ หรือสายด่วนสุขภาพจิต 1323
+        </p>
+        <a className="call-button" href="tel:1323">
+          โทร 1323
+        </a>
+        <button type="button" className="return-button" onClick={onClose}>
+          กลับไปยังพื้นที่แบ่งปัน
+        </button>
+      </section>
+    </div>
   );
 }
 
@@ -211,25 +298,19 @@ function StoryCard({
   onSubmitComment,
   onReport,
 }) {
-  const comments = Array.isArray(story.comments)
-    ? story.comments
-    : [];
+  const comments = Array.isArray(story.comments) ? story.comments : [];
 
   return (
     <article className="story-card">
       <div className="story-header">
         <div className="story-author">
           <span className="author-light" />
-
           <div>
             <div className="author-name">
               {story.nickname || 'แสงนิรนาม'}
             </div>
-
             <div className="story-time">
-              {formatTime(
-                story.published_at || story.created_at
-              )}
+              {formatTime(story.published_at || story.created_at)}
             </div>
           </div>
         </div>
@@ -243,13 +324,7 @@ function StoryCard({
         {story.title || 'เรื่องราวที่อยากแบ่งปัน'}
       </h2>
 
-      <p
-        className={
-          expanded
-            ? 'story-body expanded'
-            : 'story-body'
-        }
-      >
+      <p className={expanded ? 'story-body expanded' : 'story-body'}>
         {story.body}
       </p>
 
@@ -260,96 +335,63 @@ function StoryCard({
           onClick={onToggleExpanded}
         >
           {expanded ? 'ย่อลง' : 'อ่านต่อ'}
-
           <ChevronDown
             size={14}
-            className={
-              expanded
-                ? 'chevron rotated'
-                : 'chevron'
-            }
+            className={expanded ? 'chevron rotated' : 'chevron'}
           />
         </button>
       )}
 
-<div className="story-actions">
-  <button
-    type="button"
-    className={
-      liked
-        ? 'action-button liked'
-        : 'action-button'
-    }
-    onClick={onToggleHeart}
-  >
-    <Heart
-      size={17}
-      strokeWidth={1.8}
-      fill={liked ? 'currentColor' : 'none'}
-    />
+      <div className="story-actions">
+        <button
+          type="button"
+          className={liked ? 'action-button liked' : 'action-button'}
+          onClick={onToggleHeart}
+        >
+          <Heart
+            size={17}
+            strokeWidth={1.8}
+            fill={liked ? 'currentColor' : 'none'}
+          />
+          <span>{Number(story.heart_count || 0)}</span>
+          <span>ส่งกำลังใจ</span>
+        </button>
 
-    <span>
-      {Number(story.heart_count || 0)}
-    </span>
+        <button
+          type="button"
+          className="action-button comment-action"
+          onClick={onToggleExpanded}
+        >
+          <MessageCircle size={17} strokeWidth={1.8} />
+          <span>{Number(story.comment_count ?? comments.length ?? 0)}</span>
+          <span>ข้อความ</span>
+        </button>
 
-    <span>ส่งกำลังใจ</span>
-  </button>
-
-  <button
-    type="button"
-    className="action-button comment-action"
-    onClick={onToggleExpanded}
-  >
-    <MessageCircle
-      size={17}
-      strokeWidth={1.8}
-    />
-
-    <span>
-      {Number(
-        story.comment_count ??
-          story.comments?.length ??
-          0
-      )}
-    </span>
-
-    <span>ข้อความ</span>
-  </button>
-
-  <button
-    type="button"
-    className="action-button report-action"
-    onClick={onReport}
-    aria-label="รายงานเนื้อหา"
-  >
-    <Flag
-      size={16}
-      strokeWidth={1.8}
-    />
-
-    <span>รายงาน</span>
-  </button>
-</div>
+        <button
+          type="button"
+          className="action-button report-action"
+          onClick={onReport}
+          aria-label="รายงานเนื้อหา"
+        >
+          <Flag size={16} strokeWidth={1.8} />
+          <span>รายงาน</span>
+        </button>
+      </div>
 
       {expanded && (
         <div className="comment-area">
           {comments.length === 0 && (
             <p className="no-comments">
               ยังไม่มีข้อความที่ผ่านการตรวจสอบ
-              คุณสามารถส่งข้อความดี ๆ
-              เข้าคิวผู้ดูแลได้
+              คุณสามารถส่งข้อความดี ๆ เข้าคิวผู้ดูแลได้
             </p>
           )}
 
           {comments.map((comment) => (
-            <div
-              key={comment.id}
-              className="comment-bubble"
-            >
+            <div key={comment.id} className="comment-bubble">
               <span className="comment-name">
                 {comment.nickname || 'แสงนิรนาม'}
               </span>
-
               <span>{comment.text}</span>
             </div>
           ))}
@@ -363,14 +405,9 @@ function StoryCard({
                 maxLength={500}
                 placeholder="ส่งข้อความให้กำลังใจ..."
                 disabled={submittingComment}
-                onChange={(event) =>
-                  onCommentChange(event.target.value)
-                }
+                onChange={(event) => onCommentChange(event.target.value)}
                 onKeyDown={(event) => {
-                  if (
-                    event.key === 'Enter' &&
-                    !submittingComment
-                  ) {
+                  if (event.key === 'Enter' && !submittingComment) {
                     onSubmitComment();
                   }
                 }}
@@ -380,17 +417,11 @@ function StoryCard({
                 type="button"
                 className="send-comment-button"
                 onClick={onSubmitComment}
-                disabled={
-                  submittingComment ||
-                  !commentDraft.trim()
-                }
+                disabled={submittingComment || !commentDraft.trim()}
                 aria-label="ส่งข้อความ"
               >
                 {submittingComment ? (
-                  <LoaderCircle
-                    size={15}
-                    className="loading-spinner"
-                  />
+                  <LoaderCircle size={15} className="loading-spinner" />
                 ) : (
                   <Send size={15} />
                 )}
@@ -416,10 +447,7 @@ function WriteStory({
       <div className="write-header">
         <div>
           <h2>เล่าเรื่องของคุณ</h2>
-
-          <p>
-            เรื่องจะถูกส่งเข้าคิวผู้ดูแลก่อนเผยแพร่
-          </p>
+          <p>เรื่องจะถูกส่งเข้าคิวผู้ดูแลก่อนเผยแพร่</p>
         </div>
 
         <button
@@ -435,48 +463,37 @@ function WriteStory({
 
       <div className="nickname-box">
         <Star size={17} />
-
         <span>
-          ชื่อที่ระบบตั้งให้คือ{' '}
-          <strong>{nickname}</strong>
+          ชื่อที่ระบบตั้งให้คือ <strong>{nickname}</strong>
         </span>
       </div>
 
-      <label className="field-label">
-        หมวดหมู่
-      </label>
+      <label className="field-label">หมวดหมู่</label>
 
       <div className="write-categories">
-        {CATEGORIES.filter(
-          (category) => category.id !== 'all'
-        ).map((category) => (
-          <button
-            type="button"
-            key={category.id}
-            disabled={saving}
-            className={
-              form.category === category.id
-                ? 'write-category selected'
-                : 'write-category'
-            }
-            onClick={() =>
-              onFormChange({
-                ...form,
-                category: category.id,
-              })
-            }
-          >
-            {category.label}
-          </button>
-        ))}
+        {CATEGORIES.filter((category) => category.id !== 'all').map(
+          (category) => (
+            <button
+              type="button"
+              key={category.id}
+              disabled={saving}
+              className={
+                form.category === category.id
+                  ? 'write-category selected'
+                  : 'write-category'
+              }
+              onClick={() =>
+                onFormChange({ ...form, category: category.id })
+              }
+            >
+              {category.label}
+            </button>
+          )
+        )}
       </div>
 
-      <label
-        className="field-label"
-        htmlFor="story-title"
-      >
-        หัวข้อสั้น ๆ
-        <span> ไม่บังคับ</span>
+      <label className="field-label" htmlFor="story-title">
+        หัวข้อสั้น ๆ <span>ไม่บังคับ</span>
       </label>
 
       <input
@@ -488,17 +505,11 @@ function WriteStory({
         placeholder="เช่น วันที่ฉันไม่กล้าไปโรงเรียน"
         value={form.title}
         onChange={(event) =>
-          onFormChange({
-            ...form,
-            title: event.target.value,
-          })
+          onFormChange({ ...form, title: event.target.value })
         }
       />
 
-      <label
-        className="field-label"
-        htmlFor="story-body"
-      >
+      <label className="field-label" htmlFor="story-body">
         เรื่องราวของคุณ
       </label>
 
@@ -511,16 +522,11 @@ function WriteStory({
         placeholder="เล่าได้เท่าที่คุณสบายใจ โดยไม่ระบุข้อมูลที่สามารถระบุตัวบุคคล..."
         value={form.body}
         onChange={(event) =>
-          onFormChange({
-            ...form,
-            body: event.target.value,
-          })
+          onFormChange({ ...form, body: event.target.value })
         }
       />
 
-      <div className="character-count">
-        {form.body.length}/3000
-      </div>
+      <div className="character-count">{form.body.length}/3000</div>
 
       <label className="consent-box">
         <input
@@ -528,16 +534,11 @@ function WriteStory({
           checked={form.consent}
           disabled={saving}
           onChange={(event) =>
-            onFormChange({
-              ...form,
-              consent: event.target.checked,
-            })
+            onFormChange({ ...form, consent: event.target.checked })
           }
         />
-
         <span>
-          ฉันจะไม่เปิดเผยชื่อ เบอร์โทร ที่อยู่
-          โรงเรียน บริษัท
+          ฉันจะไม่เปิดเผยชื่อ เบอร์โทร ที่อยู่ โรงเรียน บริษัท
           หรือข้อมูลที่สามารถระบุตัวตนของผู้อื่นได้
         </span>
       </label>
@@ -545,19 +546,12 @@ function WriteStory({
       <button
         type="button"
         className="submit-story-button"
-        disabled={
-          saving ||
-          !form.body.trim() ||
-          !form.consent
-        }
+        disabled={saving || !form.body.trim() || !form.consent}
         onClick={onSubmit}
       >
         {saving ? (
           <>
-            <LoaderCircle
-              size={17}
-              className="loading-spinner"
-            />
+            <LoaderCircle size={17} className="loading-spinner" />
             กำลังส่งเรื่อง...
           </>
         ) : (
@@ -569,217 +563,29 @@ function WriteStory({
       </button>
 
       <p className="moderation-note">
-        เรื่องจะยังไม่ปรากฏบน Feed
-        จนกว่าผู้ดูแลจะตรวจสอบและอนุมัติ
+        เรื่องจะยังไม่ปรากฏบน Feed จนกว่าผู้ดูแลจะตรวจสอบและอนุมัติ
       </p>
     </section>
   );
 }
 
-function SupportModal({ onClose }) {
-  return (
-    <div className="modal-overlay">
-      <section className="support-modal">
-        <button
-          type="button"
-          className="modal-close"
-          onClick={onClose}
-          aria-label="ปิด"
-        >
-          <X size={20} />
-        </button>
-
-        <Phone className="support-icon" size={30} />
-
-        <h2>
-          คุณไม่จำเป็นต้องผ่านเรื่องนี้คนเดียว
-        </h2>
-
-        <p>
-          หากรู้สึกไม่ปลอดภัยหรือต้องการพูดคุย
-          กับใครสักคนในตอนนี้
-          โปรดติดต่อบุคคลที่ไว้ใจได้
-          หรือสายด่วนสุขภาพจิต 1323
-        </p>
-
-        <a className="call-button" href="tel:1323">
-          โทร 1323
-        </a>
-
-        <button
-          type="button"
-          className="return-button"
-          onClick={onClose}
-        >
-          กลับไปยังพื้นที่แบ่งปัน
-        </button>
-      </section>
-    </div>
-  );
-}
-function ReportModal({
-  story,
-  submitting,
-  onClose,
-  onSubmit,
-}) {
-  const [reason, setReason] = useState('');
-  const [details, setDetails] = useState('');
-
-  if (!story) {
-    return null;
-  }
-
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    if (!reason) {
-      return;
-    }
-
-    onSubmit({
-      storyId: story.id,
-      reason,
-      details: details.trim(),
-    });
-  }
-
-  return (
-    <div className="modal-overlay">
-      <section className="support-modal">
-        <button
-          type="button"
-          className="modal-close"
-          onClick={onClose}
-          disabled={submitting}
-          aria-label="ปิดหน้ารายงาน"
-        >
-          <X size={20} />
-        </button>
-
-        <Flag
-          className="support-icon"
-          size={30}
-        />
-
-        <h2>รายงานเนื้อหา</h2>
-
-        <p>
-          รายงานของคุณจะถูกส่งให้ผู้ดูแลตรวจสอบ
-          และจะไม่เปิดเผยต่อผู้เขียนเรื่อง
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <label className="field-label">
-            เหตุผลที่รายงาน
-          </label>
-
-          <div className="report-reason-list">
-            {REPORT_REASONS.map((item) => (
-              <label
-                key={item.id}
-                className={
-                  reason === item.id
-                    ? 'report-reason selected'
-                    : 'report-reason'
-                }
-              >
-                <input
-                  type="radio"
-                  name="report-reason"
-                  value={item.id}
-                  checked={reason === item.id}
-                  disabled={submitting}
-                  onChange={(event) =>
-                    setReason(event.target.value)
-                  }
-                />
-
-                <span>{item.label}</span>
-              </label>
-            ))}
-          </div>
-
-          <label
-            className="field-label"
-            htmlFor="report-details"
-          >
-            รายละเอียดเพิ่มเติม
-            <span> ไม่บังคับ</span>
-          </label>
-
-          <textarea
-            id="report-details"
-            className="form-input story-textarea"
-            rows={4}
-            maxLength={500}
-            value={details}
-            disabled={submitting}
-            placeholder="อธิบายสั้น ๆ เพื่อช่วยให้ผู้ดูแลตรวจสอบ..."
-            onChange={(event) =>
-              setDetails(event.target.value)
-            }
-          />
-
-          <div className="character-count">
-            {details.length}/500
-          </div>
-
-          <button
-            type="submit"
-            className="submit-story-button"
-            disabled={!reason || submitting}
-          >
-            {submitting ? (
-              <>
-                <LoaderCircle
-                  size={17}
-                  className="loading-spinner"
-                />
-                กำลังส่งรายงาน...
-              </>
-            ) : (
-              <>
-                <Flag size={17} />
-                ส่งรายงานให้ผู้ดูแล
-              </>
-            )}
-          </button>
-        </form>
-      </section>
-    </div>
-  );
-}
 export default function App() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-
   const [filter, setFilter] = useState('all');
   const [view, setView] = useState('feed');
   const [expandedId, setExpandedId] = useState(null);
-
-  const [nickname, setNickname] = useState(
-    createNickname()
-  );
-const [anonymousSessionId] = useState(
-  getAnonymousSessionId
-);
-  const [likedStoryIds, setLikedStoryIds] =
-    useState([]);
-
-  const [commentDrafts, setCommentDrafts] =
-    useState({});
-
-  const [submittingCommentId, setSubmittingCommentId] =
-    useState(null);
-
-  const [showSupport, setShowSupport] =
-    useState(false);
-
+  const [nickname, setNickname] = useState(createNickname());
+  const [anonymousSessionId] = useState(getAnonymousSessionId);
+  const [likedStoryIds, setLikedStoryIds] = useState([]);
+  const [commentDrafts, setCommentDrafts] = useState({});
+  const [submittingCommentId, setSubmittingCommentId] = useState(null);
+  const [showSupport, setShowSupport] = useState(false);
   const [notice, setNotice] = useState('');
-  const [savingStory, setSavingStory] =
-    useState(false);
+  const [savingStory, setSavingStory] = useState(false);
+  const [reportingStory, setReportingStory] = useState(null);
+  const [submittingReport, setSubmittingReport] = useState(false);
 
   const [form, setForm] = useState({
     category: 'school',
@@ -787,110 +593,79 @@ const [anonymousSessionId] = useState(
     body: '',
     consent: false,
   });
-async function loadSessionReactions() {
-  try {
-    const { data, error } = await supabase.rpc(
-      'get_session_reactions',
-      {
-        p_session_id: anonymousSessionId,
-      }
-    );
 
-    if (error) {
-      throw error;
+  async function loadSessionReactions() {
+    try {
+      const { data, error } = await supabase.rpc(
+        'get_session_reactions',
+        { p_session_id: anonymousSessionId }
+      );
+
+      if (error) throw error;
+      setLikedStoryIds((data || []).map((reaction) => reaction.story_id));
+    } catch (error) {
+      console.error('โหลดสถานะหัวใจไม่สำเร็จ:', error);
+      setLikedStoryIds([]);
     }
-
-    const likedIds = (data || []).map(
-      (reaction) => reaction.story_id
-    );
-
-    setLikedStoryIds(likedIds);
-  } catch (error) {
-    console.error(
-      'โหลดสถานะหัวใจไม่สำเร็จ:',
-      error
-    );
-
-    setLikedStoryIds([]);
   }
-}
+
   async function loadStories() {
     setLoading(true);
     setLoadError('');
 
     try {
-      const { data: feedRows, error: feedError } =
-        await supabase
-          .from('public_story_feed')
-          .select(
-            `
-              id,
-              category,
-              title,
-              body,
-              nickname,
-              created_at,
-              published_at,
-              comments_enabled,
-              heart_count,
-              comment_count
-            `
-          )
-          .order('published_at', {
-            ascending: false,
-            nullsFirst: false,
-          });
+      const { data: feedRows, error: feedError } = await supabase
+        .from('public_story_feed')
+        .select(
+          `
+            id,
+            category,
+            title,
+            body,
+            nickname,
+            created_at,
+            published_at,
+            comments_enabled,
+            heart_count,
+            comment_count
+          `
+        )
+        .order('published_at', { ascending: false, nullsFirst: false });
 
-      if (feedError) {
-        throw feedError;
-      }
+      if (feedError) throw feedError;
 
-      const storyIds = (feedRows || []).map(
-        (story) => story.id
-      );
-
+      const storyIds = (feedRows || []).map((story) => story.id);
       let commentRows = [];
 
       if (storyIds.length > 0) {
-        const {
-          data: publishedComments,
-          error: commentError,
-        } = await supabase
-          .from('comments')
-          .select(
-            'id, story_id, text, nickname, created_at'
-          )
-          .in('story_id', storyIds)
-          .order('created_at', {
-            ascending: true,
-          });
+        const { data: publishedComments, error: commentError } =
+          await supabase
+            .from('comments')
+            .select('id, story_id, text, nickname, created_at')
+            .in('story_id', storyIds)
+            .order('created_at', { ascending: true });
 
         if (commentError) {
-          console.error(
-            'โหลดความคิดเห็นไม่สำเร็จ:',
-            commentError
-          );
+          console.error('โหลดความคิดเห็นไม่สำเร็จ:', commentError);
         } else {
           commentRows = publishedComments || [];
         }
       }
 
-      const mergedStories = (feedRows || []).map(
-        (story) => ({
+      setStories(
+        (feedRows || []).map((story) => ({
           ...story,
           comments: commentRows.filter(
-            (comment) =>
-              comment.story_id === story.id
+            (comment) => comment.story_id === story.id
           ),
-        })
+        }))
       );
-
-      setStories(mergedStories);
     } catch (error) {
       console.error('โหลด Feed ไม่สำเร็จ:', error);
-
       setLoadError(
-        'ยังโหลดเรื่องราวจากฐานข้อมูลไม่ได้ กรุณาลองใหม่'
+        error?.message
+          ? `โหลดฐานข้อมูลไม่ได้: ${error.message}`
+          : 'ยังโหลดเรื่องราวจากฐานข้อมูลไม่ได้ กรุณาลองใหม่'
       );
     } finally {
       setLoading(false);
@@ -898,202 +673,158 @@ async function loadSessionReactions() {
   }
 
   useEffect(() => {
-  async function initializeFeed() {
-    await Promise.all([
-      loadStories(),
-      loadSessionReactions(),
-    ]);
-  }
+    async function initializeFeed() {
+      await Promise.all([loadStories(), loadSessionReactions()]);
+    }
 
-  initializeFeed();
-}, []);
+    initializeFeed();
+  }, []);
 
   const visibleStories =
     filter === 'all'
       ? stories
-      : stories.filter(
-          (story) => story.category === filter
-        );
+      : stories.filter((story) => story.category === filter);
 
   function openWriteView() {
     setNickname(createNickname());
     setNotice('');
     setView('write');
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function closeWriteView() {
-    if (savingStory) {
-      return;
-    }
-
-    setView('feed');
+    if (!savingStory) setView('feed');
   }
 
   async function submitStory() {
     const cleanBody = form.body.trim();
-    const cleanTitle =
-      form.title.trim() ||
-      'เรื่องราวที่อยากแบ่งปัน';
+    const cleanTitle = form.title.trim() || 'เรื่องราวที่อยากแบ่งปัน';
 
-    if (!cleanBody || !form.consent) {
-      return;
-    }
+    if (!cleanBody || !form.consent) return;
 
     setSavingStory(true);
     setNotice('');
 
     try {
-      const { error } = await supabase
-        .from('stories')
-        .insert({
-          category: form.category,
-          title: cleanTitle,
-          body: cleanBody,
-          nickname,
-          status: 'pending',
-          risk_level: 'normal',
-          published_at: null,
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      setForm({
-        category: 'school',
-        title: '',
-        body: '',
-        consent: false,
+      const { error } = await supabase.from('stories').insert({
+        category: form.category,
+        title: cleanTitle,
+        body: cleanBody,
+        nickname,
+        status: 'pending',
+        risk_level: 'normal',
+        published_at: null,
       });
 
+      if (error) throw error;
+
+      setForm({ category: 'school', title: '', body: '', consent: false });
       setNotice(
         'ส่งเรื่องเรียบร้อยแล้ว เรื่องกำลังรอผู้ดูแลตรวจสอบก่อนเผยแพร่'
       );
-
       setView('feed');
-
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth',
-      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('ส่งเรื่องไม่สำเร็จ:', error);
-
-      setNotice(
-        'ยังส่งเรื่องไม่ได้ กรุณาตรวจสอบข้อความและลองใหม่อีกครั้ง'
-      );
+      setNotice('ยังส่งเรื่องไม่ได้ กรุณาตรวจสอบข้อความและลองใหม่อีกครั้ง');
     } finally {
       setSavingStory(false);
     }
   }
 
   async function toggleHeart(storyId) {
-  setNotice('');
+    setNotice('');
 
-  try {
-    const { data, error } = await supabase.rpc(
-      'toggle_story_reaction',
-      {
-        p_story_id: storyId,
-        p_session_id: anonymousSessionId,
-      }
-    );
-
-    if (error) {
-      throw error;
-    }
-
-    const isLiked =
-      data?.liked === true;
-
-    const nextHeartCount =
-      Number(data?.heart_count || 0);
-
-    setLikedStoryIds((currentIds) => {
-      if (isLiked) {
-        if (currentIds.includes(storyId)) {
-          return currentIds;
+    try {
+      const { data, error } = await supabase.rpc(
+        'toggle_story_reaction',
+        {
+          p_story_id: storyId,
+          p_session_id: anonymousSessionId,
         }
-
-        return [...currentIds, storyId];
-      }
-
-      return currentIds.filter(
-        (id) => id !== storyId
       );
-    });
 
-    setStories((currentStories) =>
-      currentStories.map((story) => {
-        if (story.id !== storyId) {
-          return story;
+      if (error) throw error;
+
+      const isLiked = data?.liked === true;
+      const nextHeartCount = Number(data?.heart_count || 0);
+
+      setLikedStoryIds((currentIds) => {
+        if (isLiked) {
+          return currentIds.includes(storyId)
+            ? currentIds
+            : [...currentIds, storyId];
         }
+        return currentIds.filter((id) => id !== storyId);
+      });
 
-        return {
-          ...story,
-          heart_count: nextHeartCount,
-        };
-      })
-    );
-  } catch (error) {
-    console.error(
-      'ส่งกำลังใจไม่สำเร็จ:',
-      error
-    );
-
-    setNotice(
-      'ยังส่งกำลังใจไม่ได้ กรุณาลองใหม่อีกครั้ง'
-    );
+      setStories((currentStories) =>
+        currentStories.map((story) =>
+          story.id === storyId
+            ? { ...story, heart_count: nextHeartCount }
+            : story
+        )
+      );
+    } catch (error) {
+      console.error('ส่งกำลังใจไม่สำเร็จ:', error);
+      setNotice('ยังส่งกำลังใจไม่ได้ กรุณาลองใหม่อีกครั้ง');
+    }
   }
-}
 
   async function submitComment(storyId) {
-    const commentText = (
-      commentDrafts[storyId] || ''
-    ).trim();
-
-    if (!commentText || submittingCommentId) {
-      return;
-    }
+    const commentText = (commentDrafts[storyId] || '').trim();
+    if (!commentText || submittingCommentId) return;
 
     setSubmittingCommentId(storyId);
     setNotice('');
 
     try {
-      const { error } = await supabase
-        .from('comments')
-        .insert({
-          story_id: storyId,
-          text: commentText,
-          nickname: createNickname(),
-          status: 'pending',
-        });
+      const { error } = await supabase.from('comments').insert({
+        story_id: storyId,
+        text: commentText,
+        nickname: createNickname(),
+        status: 'pending',
+      });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      setCommentDrafts({});
+      setCommentDrafts((currentDrafts) => ({
+        ...currentDrafts,
+        [storyId]: '',
+      }));
 
       setNotice(
         'ส่งข้อความเรียบร้อยแล้ว ข้อความกำลังรอผู้ดูแลตรวจสอบ'
       );
     } catch (error) {
-      console.error(
-        'ส่งความคิดเห็นไม่สำเร็จ:',
-        error
-      );
-
-      setNotice(
-        'ยังส่งข้อความไม่ได้ กรุณาลองใหม่อีกครั้ง'
-      );
+      console.error('ส่งความคิดเห็นไม่สำเร็จ:', error);
+      setNotice('ยังส่งข้อความไม่ได้ กรุณาลองใหม่อีกครั้ง');
     } finally {
       setSubmittingCommentId(null);
+    }
+  }
+
+  async function submitReport({ storyId, reason, details }) {
+    setSubmittingReport(true);
+    setNotice('');
+
+    try {
+      const { error } = await supabase.rpc('submit_story_report', {
+        p_story_id: storyId,
+        p_reason: reason,
+        p_details: details || '',
+        p_reporter_session_id: anonymousSessionId,
+      });
+
+      if (error) throw error;
+
+      setReportingStory(null);
+      setNotice('รับรายงานเรียบร้อยแล้ว ผู้ดูแลจะตรวจสอบเนื้อหานี้');
+    } catch (error) {
+      console.error('ส่งรายงานไม่สำเร็จ:', error);
+      setNotice('ยังส่งรายงานไม่ได้ กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setSubmittingReport(false);
     }
   }
 
@@ -1101,10 +832,19 @@ async function loadSessionReactions() {
     <div className="app">
       <StarBackground />
 
-      {showSupport && (
-        <SupportModal
-          onClose={() => setShowSupport(false)}
+      {reportingStory && (
+        <ReportModal
+          story={reportingStory}
+          submitting={submittingReport}
+          onClose={() => {
+            if (!submittingReport) setReportingStory(null);
+          }}
+          onSubmit={submitReport}
         />
+      )}
+
+      {showSupport && (
+        <SupportModal onClose={() => setShowSupport(false)} />
       )}
 
       <main className="mobile-page">
@@ -1113,13 +853,9 @@ async function loadSessionReactions() {
             <div className="brand-icon">
               <Moon size={27} strokeWidth={1.5} />
             </div>
-
             <div>
               <h1>แสงที่ไม่มีชื่อ</h1>
-
-              <p>
-                พื้นที่เล็ก ๆ สำหรับแบ่งปันเรื่องราว
-              </p>
+              <p>พื้นที่เล็ก ๆ สำหรับแบ่งปันเรื่องราว</p>
             </div>
           </div>
 
@@ -1135,48 +871,29 @@ async function loadSessionReactions() {
           )}
         </header>
 
-        {notice && (
-          <div className="notice-message">
-            {notice}
-          </div>
-        )}
+        {notice && <div className="notice-message">{notice}</div>}
 
         {view === 'feed' && (
           <>
             <section className="intro-card">
               <div>
-                <h2>
-                  ที่นี่คือพื้นที่แห่งความเข้าใจ
-                </h2>
-
+                <h2>ที่นี่คือพื้นที่แห่งความเข้าใจ</h2>
                 <p>
-                  ไม่ต้องเปิดเผยตัวตน
-                  เล่าเรื่องที่พบเจอได้เท่าที่สบายใจ
+                  ไม่ต้องเปิดเผยตัวตน เล่าเรื่องที่พบเจอได้เท่าที่สบายใจ
                   และส่งข้อความดี ๆ ไว้ให้กัน
                 </p>
-
                 <button
                   type="button"
                   className="support-link"
-                  onClick={() =>
-                    setShowSupport(true)
-                  }
+                  onClick={() => setShowSupport(true)}
                 >
                   ต้องการช่องทางช่วยเหลือ
                 </button>
               </div>
-
-              <Heart
-                size={36}
-                className="intro-heart"
-                fill="currentColor"
-              />
+              <Heart size={36} className="intro-heart" fill="currentColor" />
             </section>
 
-            <nav
-              className="category-list"
-              aria-label="หมวดหมู่เรื่องราว"
-            >
+            <nav className="category-list" aria-label="หมวดหมู่เรื่องราว">
               {CATEGORIES.map((category) => (
                 <button
                   type="button"
@@ -1186,9 +903,7 @@ async function loadSessionReactions() {
                       ? 'category-button active'
                       : 'category-button'
                   }
-                  onClick={() =>
-                    setFilter(category.id)
-                  }
+                  onClick={() => setFilter(category.id)}
                 >
                   {category.label}
                 </button>
@@ -1198,24 +913,15 @@ async function loadSessionReactions() {
             {loading && <LoadingView />}
 
             {!loading && loadError && (
-              <ErrorView
-                message={loadError}
-                onRetry={loadStories}
-              />
+              <ErrorView message={loadError} onRetry={loadStories} />
             )}
 
-            {!loading &&
-              !loadError &&
-              visibleStories.length === 0 && (
-                <section className="empty-state">
-                  <Star size={30} />
-
-                  <p>
-                    ยังไม่มีเรื่องราวที่ผ่านการตรวจสอบ
-                    ในหมวดนี้
-                  </p>
-                </section>
-              )}
+            {!loading && !loadError && visibleStories.length === 0 && (
+              <section className="empty-state">
+                <Star size={30} />
+                <p>ยังไม่มีเรื่องราวที่ผ่านการตรวจสอบในหมวดนี้</p>
+              </section>
+            )}
 
             {!loading && !loadError && (
               <section className="story-list">
@@ -1223,43 +929,22 @@ async function loadSessionReactions() {
                   <StoryCard
                     key={story.id}
                     story={story}
-                    expanded={
-                      expandedId === story.id
-                    }
-                    liked={likedStoryIds.includes(
-                      story.id
-                    )}
-                    commentDraft={
-                      commentDrafts[story.id] || ''
-                    }
-                    submittingComment={
-                      submittingCommentId ===
-                      story.id
-                    }
+                    expanded={expandedId === story.id}
+                    liked={likedStoryIds.includes(story.id)}
+                    commentDraft={commentDrafts[story.id] || ''}
+                    submittingComment={submittingCommentId === story.id}
                     onToggleExpanded={() =>
-                      setExpandedId(
-                        expandedId === story.id
-                          ? null
-                          : story.id
-                      )
+                      setExpandedId(expandedId === story.id ? null : story.id)
                     }
-                    onToggleHeart={() =>
-                      toggleHeart(story.id)
-                    }
+                    onToggleHeart={() => toggleHeart(story.id)}
                     onCommentChange={(value) =>
-                      setCommentDrafts(
-                        (currentDrafts) => ({
-                          ...currentDrafts,
-                          [story.id]: value,
-                        })
-                      )
+                      setCommentDrafts((currentDrafts) => ({
+                        ...currentDrafts,
+                        [story.id]: value,
+                      }))
                     }
-                    onSubmitComment={() =>
-                      submitComment(story.id)
-                    }
-                    onReport={() => {
-  setReportingStory(story);
-}}
+                    onSubmitComment={() => submitComment(story.id)}
+                    onReport={() => setReportingStory(story)}
                   />
                 ))}
               </section>
@@ -1289,14 +974,10 @@ async function loadSessionReactions() {
 
         <footer className="main-footer">
           <Shield size={17} />
-
           <p>
-            พื้นที่นี้ไม่ใช่บริการฉุกเฉิน
-            การรักษา
-            หรือการให้คำปรึกษาทางการแพทย์
-            หากรู้สึกไม่ปลอดภัย
-            โปรดติดต่อบุคคลที่ไว้ใจได้
-            หรือสายด่วนสุขภาพจิต 1323
+            พื้นที่นี้ไม่ใช่บริการฉุกเฉิน การรักษา
+            หรือการให้คำปรึกษาทางการแพทย์ หากรู้สึกไม่ปลอดภัย
+            โปรดติดต่อบุคคลที่ไว้ใจได้ หรือสายด่วนสุขภาพจิต 1323
           </p>
         </footer>
       </main>
