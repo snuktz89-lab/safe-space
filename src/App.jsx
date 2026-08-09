@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ChevronDown,
+  Flag,
   Heart,
   LoaderCircle,
   MessageCircle,
@@ -32,7 +33,28 @@ const CATEGORY_NAMES = {
   family: 'ครอบครัว / คนใกล้ตัว',
   other: 'อื่น ๆ',
 };
-
+const REPORT_REASONS = [
+  {
+    id: 'bullying',
+    label: 'มีการกลั่นแกล้งหรือคุกคาม',
+  },
+  {
+    id: 'personal_information',
+    label: 'เปิดเผยข้อมูลส่วนบุคคล',
+  },
+  {
+    id: 'harmful_content',
+    label: 'เนื้อหาอาจก่อให้เกิดอันตราย',
+  },
+  {
+    id: 'spam',
+    label: 'สแปมหรือเนื้อหาไม่เกี่ยวข้อง',
+  },
+  {
+    id: 'other',
+    label: 'เหตุผลอื่น',
+  },
+];
 const NICKNAME_CHOICES = [
   'ดาวเหนือ',
   'แสงเทียน',
@@ -187,6 +209,7 @@ function StoryCard({
   onToggleHeart,
   onCommentChange,
   onSubmitComment,
+  onReport,
 }) {
   const comments = Array.isArray(story.comments)
     ? story.comments
@@ -249,43 +272,64 @@ function StoryCard({
         </button>
       )}
 
-      <div className="story-actions">
-        <button
-          type="button"
-          className={
-            liked
-              ? 'action-button liked'
-              : 'action-button'
-          }
-          onClick={onToggleHeart}
-        >
-          <Heart
-            size={17}
-            strokeWidth={1.8}
-            fill={liked ? 'currentColor' : 'none'}
-          />
+<div className="story-actions">
+  <button
+    type="button"
+    className={
+      liked
+        ? 'action-button liked'
+        : 'action-button'
+    }
+    onClick={onToggleHeart}
+  >
+    <Heart
+      size={17}
+      strokeWidth={1.8}
+      fill={liked ? 'currentColor' : 'none'}
+    />
 
-          <span>
-            {Number(story.heart_count || 0)}
-          </span>
+    <span>
+      {Number(story.heart_count || 0)}
+    </span>
 
-          <span>ส่งกำลังใจ</span>
-        </button>
+    <span>ส่งกำลังใจ</span>
+  </button>
 
-        <button
-          type="button"
-          className="action-button comment-action"
-          onClick={onToggleExpanded}
-        >
-          <MessageCircle size={17} strokeWidth={1.8} />
+  <button
+    type="button"
+    className="action-button comment-action"
+    onClick={onToggleExpanded}
+  >
+    <MessageCircle
+      size={17}
+      strokeWidth={1.8}
+    />
 
-          <span>
-            {story.comment_count ?? comments.length}
-          </span>
+    <span>
+      {Number(
+        story.comment_count ??
+          story.comments?.length ??
+          0
+      )}
+    </span>
 
-          <span>ข้อความ</span>
-        </button>
-      </div>
+    <span>ข้อความ</span>
+  </button>
+
+  <button
+    type="button"
+    className="action-button report-action"
+    onClick={onReport}
+    aria-label="รายงานเนื้อหา"
+  >
+    <Flag
+      size={16}
+      strokeWidth={1.8}
+    />
+
+    <span>รายงาน</span>
+  </button>
+</div>
 
       {expanded && (
         <div className="comment-area">
@@ -573,7 +617,139 @@ function SupportModal({ onClose }) {
     </div>
   );
 }
+function ReportModal({
+  story,
+  submitting,
+  onClose,
+  onSubmit,
+}) {
+  const [reason, setReason] = useState('');
+  const [details, setDetails] = useState('');
 
+  if (!story) {
+    return null;
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    if (!reason) {
+      return;
+    }
+
+    onSubmit({
+      storyId: story.id,
+      reason,
+      details: details.trim(),
+    });
+  }
+
+  return (
+    <div className="modal-overlay">
+      <section className="support-modal">
+        <button
+          type="button"
+          className="modal-close"
+          onClick={onClose}
+          disabled={submitting}
+          aria-label="ปิดหน้ารายงาน"
+        >
+          <X size={20} />
+        </button>
+
+        <Flag
+          className="support-icon"
+          size={30}
+        />
+
+        <h2>รายงานเนื้อหา</h2>
+
+        <p>
+          รายงานของคุณจะถูกส่งให้ผู้ดูแลตรวจสอบ
+          และจะไม่เปิดเผยต่อผู้เขียนเรื่อง
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <label className="field-label">
+            เหตุผลที่รายงาน
+          </label>
+
+          <div className="report-reason-list">
+            {REPORT_REASONS.map((item) => (
+              <label
+                key={item.id}
+                className={
+                  reason === item.id
+                    ? 'report-reason selected'
+                    : 'report-reason'
+                }
+              >
+                <input
+                  type="radio"
+                  name="report-reason"
+                  value={item.id}
+                  checked={reason === item.id}
+                  disabled={submitting}
+                  onChange={(event) =>
+                    setReason(event.target.value)
+                  }
+                />
+
+                <span>{item.label}</span>
+              </label>
+            ))}
+          </div>
+
+          <label
+            className="field-label"
+            htmlFor="report-details"
+          >
+            รายละเอียดเพิ่มเติม
+            <span> ไม่บังคับ</span>
+          </label>
+
+          <textarea
+            id="report-details"
+            className="form-input story-textarea"
+            rows={4}
+            maxLength={500}
+            value={details}
+            disabled={submitting}
+            placeholder="อธิบายสั้น ๆ เพื่อช่วยให้ผู้ดูแลตรวจสอบ..."
+            onChange={(event) =>
+              setDetails(event.target.value)
+            }
+          />
+
+          <div className="character-count">
+            {details.length}/500
+          </div>
+
+          <button
+            type="submit"
+            className="submit-story-button"
+            disabled={!reason || submitting}
+          >
+            {submitting ? (
+              <>
+                <LoaderCircle
+                  size={17}
+                  className="loading-spinner"
+                />
+                กำลังส่งรายงาน...
+              </>
+            ) : (
+              <>
+                <Flag size={17} />
+                ส่งรายงานให้ผู้ดูแล
+              </>
+            )}
+          </button>
+        </form>
+      </section>
+    </div>
+  );
+}
 export default function App() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1081,6 +1257,9 @@ async function loadSessionReactions() {
                     onSubmitComment={() =>
                       submitComment(story.id)
                     }
+                    onReport={() => {
+  setReportingStory(story);
+}}
                   />
                 ))}
               </section>
