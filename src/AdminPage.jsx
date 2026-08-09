@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
 import {
   Check,
   EyeOff,
   LoaderCircle,
   LogIn,
   LogOut,
+  MessageCircle,
   Moon,
   RefreshCw,
   Shield,
